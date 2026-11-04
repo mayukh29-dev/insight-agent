@@ -1,0 +1,241 @@
+date,order_id,product,category,quantity,unit_price
+2025-01-01,ORD-0001,Throw Pillow,Home,1,18.00
+2025-01-01,ORD-0002,Notebook,Stationery,2,6.25
+2025-01-02,ORD-0003,Cutting Board,Kitchen,2,22.00
+2025-01-03,ORD-0004,Throw Pillow,Home,5,18.00
+2025-01-03,ORD-0005,Throw Pillow,Home,5,18.00
+2025-01-04,ORD-0006,USB Cable,Electronics,1,12.00
+2025-01-05,ORD-0007,Desk Lamp,Home,1,24.50
+2025-01-05,ORD-0008,Cutting Board,Kitchen,2,22.00
+2025-01-06,ORD-0009,Desk Lamp,Home,5,24.50
+2025-01-07,ORD-0010,Cutting Board,Kitchen,5,22.00
+2025-01-08,ORD-0011,USB Cable,Electronics,2,12.00
+2025-01-08,ORD-0012,Wireless Mouse,Electronics,5,32.50
+2025-01-09,ORD-0013,Notebook,Stationery,1,6.25
+2025-01-10,ORD-0014,Travel Mug,Kitchen,4,15.75
+2025-01-10,ORD-0015,Gel Pen Set,Stationery,3,9.50
+2025-01-11,ORD-0016,Travel Mug,Kitchen,2,15.75
+2025-01-12,ORD-0017,Gel Pen Set,Stationery,1,9.50
+2025-01-12,ORD-0018,Throw Pillow,Home,4,18.00
+2025-01-13,ORD-0019,Throw Pillow,Home,3,18.00
+2025-01-14,ORD-0020,Gel Pen Set,Stationery,5,9.50
+2025-01-15,ORD-0021,Notebook,Stationery,1,6.25
+2025-01-15,ORD-0022,Wireless Mouse,Electronics,5,32.50
+2025-01-16,ORD-0023,Throw Pillow,Home,4,18.00
+2025-01-17,ORD-0024,Throw Pillow,Home,5,18.00
+2025-01-17,ORD-0025,Notebook,Stationery,5,6.25
+2025-01-18,ORD-0026,Gel Pen Set,Stationery,5,9.50
+2025-01-19,ORD-0027,Cutting Board,Kitchen,1,22.00
+2025-01-19,ORD-0028,Desk Lamp,Home,2,24.50
+2025-01-20,ORD-0029,Notebook,Stationery,1,6.25
+2025-01-21,ORD-0030,Cutting Board,Kitchen,1,22.00
+2025-01-22,ORD-0031,USB Cable,Electronics,3,12.00
+2025-01-22,ORD-0032,Wireless Mouse,Electronics,3,32.50
+2025-01-23,ORD-0033,Travel Mug,Kitchen,3,15.75
+2025-01-24,ORD-0034,Gel Pen Set,Stationery,2,9.50
+2025-01-24,ORD-0035,Notebook,Stationery,1,6.25
+2025-01-25,ORD-0036,Travel Mug,Kitchen,5,15.75
+2025-01-26,ORD-0037,Cutting Board,Kitchen,2,22.00
+2025-01-26,ORD-0038,Wireless Mouse,Electronics,4,32.50
+2025-01-27,ORD-0039,Notebook,Stationery,5,6.25
+2025-01-28,ORD-0040,Cutting Board,Kitchen,3,22.00
+2025-02-01,ORD-0041,Desk Lamp,Home,2,24.50
+2025-02-01,ORD-0042,Desk Lamp,Home,3,24.50
+2025-02-02,ORD-0043,USB Cable,Electronics,3,12.00
+2025-02-03,ORD-0044,Throw Pillow,Home,2,18.00
+2025-02-03,ORD-0045,Gel Pen Set,Stationery,2,9.50
+2025-02-04,ORD-0046,Wireless Mouse,Electronics,4,32.50
+2025-02-05,ORD-0047,Wireless Mouse,Electronics,2,32.50
+2025-02-05,ORD-0048,Notebook,Stationery,2,6.25
+2025-02-06,ORD-0049,Cutting Board,Kitchen,5,22.00
+2025-02-07,ORD-0050,Notebook,Stationery,5,6.25
+2025-02-08,ORD-0051,USB Cable,Electronics,5,12.00
+2025-02-08,ORD-0052,USB Cable,Electronics,3,12.00
+2025-02-09,ORD-0053,Cutting Board,Kitchen,2,22.00
+2025-02-10,ORD-0054,Wireless Mouse,Electronics,1,32.50
+2025-02-10,ORD-0055,Desk Lamp,Home,1,24.50
+2025-02-11,ORD-0056,Travel Mug,Kitchen,2,15.75
+2025-02-12,ORD-0057,USB Cable,Electronics,5,12.00
+2025-02-12,ORD-0058,Throw Pillow,Home,4,18.00
+2025-02-13,ORD-0059,USB Cable,Electronics,5,12.00
+2025-02-14,ORD-0060,Wireless Mouse,Electronics,5,32.50
+2025-02-15,ORD-0061,Notebook,Stationery,5,6.25
+2025-02-15,ORD-0062,Desk Lamp,Home,1,24.50
+2025-02-16,ORD-0063,Notebook,Stationery,3,6.25
+2025-02-17,ORD-0064,Throw Pillow,Home,3,18.00
+2025-02-17,ORD-0065,USB Cable,Electronics,2,12.00
+2025-02-18,ORD-0066,Wireless Mouse,Electronics,1,32.50
+2025-02-19,ORD-0067,Notebook,Stationery,5,6.25
+2025-02-19,ORD-0068,Travel Mug,Kitchen,5,15.75
+2025-02-20,ORD-0069,Throw Pillow,Home,3,18.00
+2025-02-21,ORD-0070,Cutting Board,Kitchen,2,22.00
+2025-02-22,ORD-0071,Gel Pen Set,Stationery,2,9.50
+2025-02-22,ORD-0072,Desk Lamp,Home,5,24.50
+2025-02-23,ORD-0073,Gel Pen Set,Stationery,4,9.50
+2025-02-24,ORD-0074,Desk Lamp,Home,1,24.50
+2025-02-24,ORD-0075,Gel Pen Set,Stationery,3,9.50
+2025-02-25,ORD-0076,Cutting Board,Kitchen,1,22.00
+2025-02-26,ORD-0077,Cutting Board,Kitchen,5,22.00
+2025-02-26,ORD-0078,Throw Pillow,Home,1,18.00
+2025-02-27,ORD-0079,Wireless Mouse,Electronics,1,32.50
+2025-02-28,ORD-0080,Travel Mug,Kitchen,2,15.75
+2025-03-01,ORD-0081,Wireless Mouse,Electronics,5,32.50
+2025-03-01,ORD-0082,Travel Mug,Kitchen,3,15.75
+2025-03-02,ORD-0083,USB Cable,Electronics,2,12.00
+2025-03-03,ORD-0084,Cutting Board,Kitchen,3,22.00
+2025-03-03,ORD-0085,USB Cable,Electronics,3,12.00
+2025-03-04,ORD-0086,Wireless Mouse,Electronics,5,32.50
+2025-03-05,ORD-0087,Wireless Mouse,Electronics,1,32.50
+2025-03-05,ORD-0088,Cutting Board,Kitchen,2,22.00
+2025-03-06,ORD-0089,Throw Pillow,Home,3,18.00
+2025-03-07,ORD-0090,Desk Lamp,Home,5,24.50
+2025-03-08,ORD-0091,Cutting Board,Kitchen,5,22.00
+2025-03-08,ORD-0092,Cutting Board,Kitchen,1,22.00
+2025-03-09,ORD-0093,Throw Pillow,Home,1,18.00
+2025-03-10,ORD-0094,Cutting Board,Kitchen,1,22.00
+2025-03-10,ORD-0095,Desk Lamp,Home,3,24.50
+2025-03-11,ORD-0096,Throw Pillow,Home,5,18.00
+2025-03-12,ORD-0097,Cutting Board,Kitchen,3,22.00
+2025-03-12,ORD-0098,Wireless Mouse,Electronics,2,32.50
+2025-03-13,ORD-0099,Travel Mug,Kitchen,5,15.75
+2025-03-14,ORD-0100,Wireless Mouse,Electronics,2,32.50
+2025-03-15,ORD-0101,Wireless Mouse,Electronics,4,32.50
+2025-03-15,ORD-0102,Cutting Board,Kitchen,1,22.00
+2025-03-16,ORD-0103,Throw Pillow,Home,4,18.00
+2025-03-17,ORD-0104,Gel Pen Set,Stationery,4,9.50
+2025-03-17,ORD-0105,USB Cable,Electronics,4,12.00
+2025-03-18,ORD-0106,Desk Lamp,Home,1,24.50
+2025-03-19,ORD-0107,Desk Lamp,Home,4,24.50
+2025-03-19,ORD-0108,Gel Pen Set,Stationery,1,9.50
+2025-03-20,ORD-0109,Cutting Board,Kitchen,2,22.00
+2025-03-21,ORD-0110,Cutting Board,Kitchen,5,22.00
+2025-03-22,ORD-0111,Wireless Mouse,Electronics,2,32.50
+2025-03-22,ORD-0112,USB Cable,Electronics,2,12.00
+2025-03-23,ORD-0113,Notebook,Stationery,4,6.25
+2025-03-24,ORD-0114,Cutting Board,Kitchen,1,22.00
+2025-03-24,ORD-0115,Wireless Mouse,Electronics,5,32.50
+2025-03-25,ORD-0116,Throw Pillow,Home,1,18.00
+2025-03-26,ORD-0117,Desk Lamp,Home,1,24.50
+2025-03-26,ORD-0118,Cutting Board,Kitchen,2,22.00
+2025-03-27,ORD-0119,USB Cable,Electronics,4,12.00
+2025-03-28,ORD-0120,Wireless Mouse,Electronics,2,32.50
+2025-04-01,ORD-0121,USB Cable,Electronics,1,12.00
+2025-04-01,ORD-0122,Travel Mug,Kitchen,4,15.75
+2025-04-02,ORD-0123,Desk Lamp,Home,4,24.50
+2025-04-03,ORD-0124,Notebook,Stationery,4,6.25
+2025-04-03,ORD-0125,Notebook,Stationery,4,6.25
+2025-04-04,ORD-0126,Wireless Mouse,Electronics,2,32.50
+2025-04-05,ORD-0127,Cutting Board,Kitchen,3,22.00
+2025-04-05,ORD-0128,Cutting Board,Kitchen,1,22.00
+2025-04-06,ORD-0129,Desk Lamp,Home,3,24.50
+2025-04-07,ORD-0130,Desk Lamp,Home,1,24.50
+2025-04-08,ORD-0131,Wireless Mouse,Electronics,5,32.50
+2025-04-08,ORD-0132,Travel Mug,Kitchen,1,15.75
+2025-04-09,ORD-0133,Throw Pillow,Home,2,18.00
+2025-04-10,ORD-0134,Throw Pillow,Home,5,18.00
+2025-04-10,ORD-0135,Throw Pillow,Home,2,18.00
+2025-04-11,ORD-0136,USB Cable,Electronics,1,12.00
+2025-04-12,ORD-0137,Cutting Board,Kitchen,5,22.00
+2025-04-12,ORD-0138,Desk Lamp,Home,5,24.50
+2025-04-13,ORD-0139,Throw Pillow,Home,4,18.00
+2025-04-14,ORD-0140,Gel Pen Set,Stationery,3,9.50
+2025-04-15,ORD-0141,Cutting Board,Kitchen,3,22.00
+2025-04-15,ORD-0142,Cutting Board,Kitchen,3,22.00
+2025-04-16,ORD-0143,USB Cable,Electronics,2,12.00
+2025-04-17,ORD-0144,Notebook,Stationery,4,6.25
+2025-04-17,ORD-0145,Gel Pen Set,Stationery,1,9.50
+2025-04-18,ORD-0146,Desk Lamp,Home,4,24.50
+2025-04-19,ORD-0147,Throw Pillow,Home,1,18.00
+2025-04-19,ORD-0148,Cutting Board,Kitchen,5,22.00
+2025-04-20,ORD-0149,Notebook,Stationery,2,6.25
+2025-04-21,ORD-0150,Gel Pen Set,Stationery,1,9.50
+2025-04-22,ORD-0151,Cutting Board,Kitchen,3,22.00
+2025-04-22,ORD-0152,Notebook,Stationery,2,6.25
+2025-04-23,ORD-0153,Wireless Mouse,Electronics,5,32.50
+2025-04-24,ORD-0154,Notebook,Stationery,5,6.25
+2025-04-24,ORD-0155,Desk Lamp,Home,5,24.50
+2025-04-25,ORD-0156,Notebook,Stationery,1,6.25
+2025-04-26,ORD-0157,Travel Mug,Kitchen,3,15.75
+2025-04-26,ORD-0158,Throw Pillow,Home,1,18.00
+2025-04-27,ORD-0159,Travel Mug,Kitchen,3,15.75
+2025-04-28,ORD-0160,Notebook,Stationery,5,6.25
+2025-05-01,ORD-0161,Cutting Board,Kitchen,3,22.00
+2025-05-01,ORD-0162,Cutting Board,Kitchen,3,22.00
+2025-05-02,ORD-0163,Wireless Mouse,Electronics,3,32.50
+2025-05-03,ORD-0164,Desk Lamp,Home,1,24.50
+2025-05-03,ORD-0165,USB Cable,Electronics,3,12.00
+2025-05-04,ORD-0166,Desk Lamp,Home,1,24.50
+2025-05-05,ORD-0167,Gel Pen Set,Stationery,2,9.50
+2025-05-05,ORD-0168,Notebook,Stationery,2,6.25
+2025-05-06,ORD-0169,Wireless Mouse,Electronics,5,32.50
+2025-05-07,ORD-0170,USB Cable,Electronics,5,12.00
+2025-05-08,ORD-0171,Desk Lamp,Home,1,24.50
+2025-05-08,ORD-0172,Throw Pillow,Home,2,18.00
+2025-05-09,ORD-0173,Desk Lamp,Home,3,24.50
+2025-05-10,ORD-0174,Travel Mug,Kitchen,4,15.75
+2025-05-10,ORD-0175,Travel Mug,Kitchen,1,15.75
+2025-05-11,ORD-0176,Notebook,Stationery,3,6.25
+2025-05-12,ORD-0177,Desk Lamp,Home,3,24.50
+2025-05-12,ORD-0178,Cutting Board,Kitchen,2,22.00
+2025-05-13,ORD-0179,Throw Pillow,Home,3,18.00
+2025-05-14,ORD-0180,USB Cable,Electronics,5,12.00
+2025-05-15,ORD-0181,Travel Mug,Kitchen,2,15.75
+2025-05-15,ORD-0182,Travel Mug,Kitchen,2,15.75
+2025-05-16,ORD-0183,USB Cable,Electronics,1,12.00
+2025-05-17,ORD-0184,Travel Mug,Kitchen,3,15.75
+2025-05-17,ORD-0185,USB Cable,Electronics,2,12.00
+2025-05-18,ORD-0186,Notebook,Stationery,2,6.25
+2025-05-19,ORD-0187,Throw Pillow,Home,4,18.00
+2025-05-19,ORD-0188,Desk Lamp,Home,4,24.50
+2025-05-20,ORD-0189,Cutting Board,Kitchen,2,22.00
+2025-05-21,ORD-0190,Wireless Mouse,Electronics,3,32.50
+2025-05-22,ORD-0191,Notebook,Stationery,2,6.25
+2025-05-22,ORD-0192,Cutting Board,Kitchen,1,22.00
+2025-05-23,ORD-0193,Cutting Board,Kitchen,4,22.00
+2025-05-24,ORD-0194,Gel Pen Set,Stationery,3,9.50
+2025-05-24,ORD-0195,Throw Pillow,Home,3,18.00
+2025-05-25,ORD-0196,Gel Pen Set,Stationery,5,9.50
+2025-05-26,ORD-0197,USB Cable,Electronics,5,12.00
+2025-05-26,ORD-0198,Gel Pen Set,Stationery,1,9.50
+2025-05-27,ORD-0199,Throw Pillow,Home,3,18.00
+2025-05-28,ORD-0200,Travel Mug,Kitchen,5,15.75
+2025-06-01,ORD-0201,Notebook,Stationery,1,6.25
+2025-06-01,ORD-0202,Throw Pillow,Home,5,18.00
+2025-06-02,ORD-0203,USB Cable,Electronics,3,12.00
+2025-06-03,ORD-0204,Gel Pen Set,Stationery,4,9.50
+2025-06-03,ORD-0205,Throw Pillow,Home,4,18.00
+2025-06-04,ORD-0206,Cutting Board,Kitchen,3,22.00
+2025-06-05,ORD-0207,Desk Lamp,Home,4,24.50
+2025-06-05,ORD-0208,Desk Lamp,Home,5,24.50
+2025-06-06,ORD-0209,Cutting Board,Kitchen,3,22.00
+2025-06-07,ORD-0210,USB Cable,Electronics,1,12.00
+2025-06-08,ORD-0211,Gel Pen Set,Stationery,5,9.50
+2025-06-08,ORD-0212,Gel Pen Set,Stationery,1,9.50
+2025-06-09,ORD-0213,Notebook,Stationery,5,6.25
+2025-06-10,ORD-0214,Notebook,Stationery,4,6.25
+2025-06-10,ORD-0215,Gel Pen Set,Stationery,4,9.50
+2025-06-11,ORD-0216,Notebook,Stationery,5,6.25
+2025-06-12,ORD-0217,Travel Mug,Kitchen,2,15.75
+2025-06-12,ORD-0218,USB Cable,Electronics,4,12.00
+2025-06-13,ORD-0219,Travel Mug,Kitchen,5,15.75
+2025-06-14,ORD-0220,Notebook,Stationery,4,6.25
+2025-06-15,ORD-0221,Desk Lamp,Home,3,24.50
+2025-06-15,ORD-0222,Notebook,Stationery,2,6.25
+2025-06-16,ORD-0223,USB Cable,Electronics,5,12.00
+2025-06-17,ORD-0224,Gel Pen Set,Stationery,4,9.50
+2025-06-17,ORD-0225,Wireless Mouse,Electronics,4,32.50
+2025-06-18,ORD-0226,Cutting Board,Kitchen,5,22.00
+2025-06-19,ORD-0227,Wireless Mouse,Electronics,2,32.50
+2025-06-19,ORD-0228,Throw Pillow,Home,3,18.00
+2025-06-20,ORD-0229,Gel Pen Set,Stationery,1,9.50
+2025-06-21,ORD-0230,Cutting Board,Kitchen,3,22.00
+2025-06-22,ORD-0231,Cutting Board,Kitchen,2,22.00
+2025-06-22,ORD-0232,Travel Mug,Kitchen,1,15.75
+2025-06-23,ORD-0233,Desk Lamp,Home,2,24.50
+2025-06-24,ORD-0234,Wireless Mouse,Electronics,5,32.50
+2025-06-24,ORD-0235,Throw Pillow,Home,4,18.00
+2025-06-25,ORD-0236,USB Cable,Electronics,5,12.00
+2025-06-26,ORD-0237,Cutting Board,Kitchen,4,22.00
+2025-06-26,ORD-0238,Wireless Mouse,Electronics,4,32.50
+2025-06-27,ORD-0239,Cutting Board,Kitchen,2,22.00
+2025-06-28,ORD-0240,Desk Lamp,Home,1,24.50
