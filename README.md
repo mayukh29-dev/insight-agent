@@ -17,4 +17,28 @@ Analyze a reproducible retail sales dataset, compute accurate business metrics, 
 - Do not commit API keys or `.env` files.
 
 ## Status
-Project initialized. Day 1 implementation is the next task.
+Day 1 provides a terminal report for a fictional retail dataset.
+
+## Day 1 setup
+
+From the repository root, create and activate a virtual environment with Python 3.11 or newer.
+
+```sh
+python -m venv .venv
+```
+
+In PowerShell, run `.\.venv\Scripts\Activate.ps1`. On macOS or Linux, run `source .venv/bin/activate`.
+
+```sh
+python -m pip install -r requirements.txt
+python app.py
+python -m pytest -q
+```
+
+## Data and metrics
+
+The bundled `data/sales.csv` contains 240 fictional orders from January through June 2025. Run `python generate_data.py` to recreate the same CSV using the fixed seed.
+
+The loader requires `date`, `order_id`, `product`, `category`, `quantity`, and `unit_price`. It rejects missing fields, invalid calendar dates, quantities that are not positive whole numbers, and prices that are negative or nonfinite.
+
+Revenue is quantity times unit price in US dollars. Category sales include units sold and revenue. The monthly report fills any gaps between the first and last sale with zero revenue. The top five products are ranked by revenue, with ties sorted alphabetically.
