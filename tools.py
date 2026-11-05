@@ -11,6 +11,8 @@ def load_sales(path):
     missing = sorted(set(REQUIRED_COLUMNS) - set(sales.columns))
     if missing:
         raise ValueError(f"Missing required columns: {', '.join(missing)}")
+    if sales.empty:
+        raise ValueError("Sales dataset is empty.")
 
     dates = pd.to_datetime(sales["date"], format="%Y-%m-%d", errors="coerce")
     if dates.isna().any():
@@ -28,6 +30,9 @@ def load_sales(path):
         sales[column] = sales[column].str.strip()
         if sales[column].eq("").any():
             raise ValueError(f"Missing value in {column}.")
+
+    if sales["order_id"].duplicated().any():
+        raise ValueError("Duplicate order_id values are not allowed.")
 
     return sales.assign(date=dates, quantity=quantity, unit_price=price)
 
