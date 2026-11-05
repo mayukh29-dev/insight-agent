@@ -202,7 +202,8 @@ def test_sdk_api_failures(sales, status, message):
 def test_real_sdk_transport_offline(sales):
     import httpx2
 
-    replies = iter([response(("total_revenue", "{}", "a")), response(text="Ready"), draft()])
+    replies = iter([response(("total_revenue", "{}", "a")), response(text="Ready"),
+                    draft("Revenue is $999"), draft()])
     requests = []
 
     def handle(request):
@@ -213,7 +214,25 @@ def test_real_sdk_transport_offline(sales):
                 http_client=httpx2.Client(transport=httpx2.MockTransport(handle))) as client:
         assert "USD 12951.00" in run_agent("Revenue?", sales, client)
     assert requests[0]["store"] is False
-    assert requests[2]["text"]["format"]["type"] == "json_object"
+    # Check the actual serialized SDK requests for both writing and revision.
+    expected_format = {
+        "type": "json_schema", "name": "sales_report", "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "insights": {"type": "array", "items": {"type": "string"}},
+                "recommendations": {"type": "array", "items": {"type": "string"}},
+                "limitations": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": ["insights", "recommendations", "limitations"],
+            "additionalProperties": False,
+        },
+    }
+    assert len(requests) == 4
+    assert requests[2]["text"]["format"] == expected_format
+    assert requests[3]["text"]["format"] == expected_format
+    assert "verification_issues" in json.loads(requests[3]["input"])
+    assert "text" not in requests[0] and "text" not in requests[1]
 
 
 def test_cli_ask(sales, monkeypatch, capsys):
