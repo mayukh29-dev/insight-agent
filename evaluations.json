@@ -1,0 +1,14 @@
+[
+  {"question": "What is total revenue?", "tools": ["total_revenue"], "fact": "12951.00"},
+  {"question": "Which category generated the most revenue?", "tools": ["category_sales"], "fact": "Electronics"},
+  {"question": "Which category generated the least revenue?", "tools": ["category_sales"], "fact": "Stationery"},
+  {"question": "Show monthly revenue trends.", "tools": ["monthly_revenue"], "fact": "2455.50"},
+  {"question": "Which month had the most revenue?", "tools": ["monthly_revenue"], "fact": "2025-03"},
+  {"question": "Which month had the least revenue?", "tools": ["monthly_revenue"], "fact": "2025-05"},
+  {"question": "What are the top five products by revenue?", "tools": ["top_products"], "fact": "Wireless Mouse"},
+  {"question": "Compare category revenue and total revenue.", "tools": ["category_sales", "total_revenue"], "fact": "4196.50"},
+  {"question": "How many units were sold by category?", "tools": ["category_sales"], "fact": "185"},
+  {"question": "What is our profit?", "tools": [], "fact": "Insufficient evidence"},
+  {"question": "Forecast next month's revenue.", "tools": [], "fact": "Insufficient evidence"},
+  {"question": "Why did revenue fall?", "tools": [], "fact": "Insufficient evidence"}
+]
