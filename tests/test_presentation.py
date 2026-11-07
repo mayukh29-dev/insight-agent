@@ -72,3 +72,14 @@ def test_empty_question_and_invalid_mode():
         answer_question(" ", None, "Demo Mode", {})
     with pytest.raises(ValueError, match="Choose Demo Mode"):
         answer_question("Revenue?", None, "Unknown", {})
+
+
+def test_summary_is_not_repeated_as_an_additional_insight():
+    report = parse_report(
+        "Question\nRevenue?\n\nBusiness insights\n- Electronics leads revenue.\n"
+        "- Review the category mix.\n- Electronics leads revenue.\n- Review the category mix.\n\n"
+        "Limitations\n- Fictional sales only.", "Revenue?"
+    )
+    assert report.summary == "Electronics leads revenue."
+    assert report.additional_insights == ["Review the category mix."]
+    assert report.limitations == ["Fictional sales only."]
