@@ -40,7 +40,7 @@ def show_report(report):
         with st.expander("Calculated metrics", expanded=True):
             for metric in report.metrics:
                 st.write(metric)
-    for heading, entries in (("Business insights", report.insights),
+    for heading, entries in (("Business insights", report.additional_insights),
                              ("Recommendations", report.recommendations)):
         if entries:
             st.markdown(f"#### {heading}")
