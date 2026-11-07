@@ -11,7 +11,7 @@ def test_demo_question_is_offline(monkeypatch):
     at = AppTest.from_file(str(APP), default_timeout=30).run()
     assert not at.exception
     assert "Live Mode" not in [x.value for x in at.radio]
-    at.button(key=None)[0].click().run()
+    at.button[0].click().run()
     assert not at.exception
     assert any("Electronics generated the most revenue" in x.value for x in at.markdown)
 
