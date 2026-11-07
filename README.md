@@ -116,7 +116,11 @@ reasoning items. Execution is bounded to four tool rounds.
 
 A separate writing request uses strict Structured Outputs for insights,
 recommendations, and limitations. Complete fact references bind values to labels and
-units. Deterministic verification rejects unsupported explicit numerical claims,
+units. Metric references must be standalone insight entries and render as natural,
+complete sentences such as “Electronics generated $4,196.50 in revenue from 184 units
+sold.” Inline metric substitution is rejected. Monetary output uses USD with commas
+and two decimal places. The UI shows the summary insight once and lists only distinct
+additional insights. Deterministic verification rejects unsupported explicit numerical claims,
 allows one revision, then removes and flags unverified statements. The UI adapts
 these report sections without rewriting the agent's claims. Qualitative
 interpretations still require human review.
