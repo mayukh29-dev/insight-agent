@@ -1,219 +1,221 @@
-# ◈ InsightAgent
+# InsightAgent
 
-A retail analytics portfolio application connecting business questions to tested
-Python calculations, interactive charts, and a published Tableau dashboard.
+**An AI retail analyst with inspectable calculations and interactive business dashboards.**
 
-**Explore the data. Ask the analyst. Inspect the evidence.**
+InsightAgent turns retail sales questions into Python calculations, concise reports,
+and visual evidence. It combines a Streamlit workspace, Plotly exploration, an
+OpenAI-powered analyst, and an independently published Tableau Public dashboard.
 
-[Open the Tableau Public dashboard](https://public.tableau.com/views/InsightAgent-RetailSalesIntelligenceDashboard/InsightAgent-RetailSalesOverview)
+[Explore the Tableau dashboard](https://public.tableau.com/views/InsightAgent-RetailSalesIntelligenceDashboard/InsightAgent-RetailSalesOverview)
+· [Beginner demo](docs/nontechnical_demo.md)
+· [Technical walkthrough](docs/technical_walkthrough.md)
+· [Portfolio copy](docs/portfolio.md)
 
-## Three ways to explore
+## What you can explore
 
-| Workspace | What it does | Data scope |
-| --- | --- | --- |
-| AI Analyst | Demo answers or live OpenAI planning, calculations, and verified reports | Complete local CSV |
-| Sales Dashboard | Plotly charts with category and inclusive date filters | Selected local transactions |
-| Tableau Intelligence | Embedded independent Tableau Public portfolio view | Published workbook's own data and controls |
+| Feature | Experience |
+| --- | --- |
+| **AI Analyst** | Ask a business question and inspect the answer, metrics, tools, recommendations, and limitations. |
+| **Demo Mode** | Try four clearly labeled, precomputed answers based on validated sales data, without an API key. |
+| **Live Mode** | Let an OpenAI model select and execute trusted Python tools, then write a report from their results. |
+| **Sales Dashboard** | Explore revenue, transactions, units, category sales, monthly trends, and leading products with interactive Plotly charts. |
+| **Tableau Intelligence** | View the independent Tableau Public dashboard through an embed or open the full dashboard directly. |
+| **Terminal interface** | Run the deterministic report or ask the same live analyst from the command line. |
 
-The bundled fictional dataset contains **240 transactions**, **717 units sold**,
-and **$12,951.00 revenue** across January–June 2025. Those values describe the full
-dataset. Every local chart and KPI is recalculated from the selected dataframe.
+Dashboard category and date filters apply to every local dashboard KPI and chart.
+AI Analyst uses the complete CSV. Tableau has its own data and controls.
 
-## Quick start
+## Try it locally without an API key
 
-Use Python 3.11 or newer. From the repository root, create a virtual environment.
+Use Python 3.11 or newer and a terminal. Verification for this revision used Python
+3.15 on Windows. Other Python versions and operating systems have not been tested
+for this revision.
 
 ```sh
+git clone https://github.com/mayukh29-dev/insight-agent.git
+cd insight-agent
 python -m venv .venv
 ```
 
-Activate it with `.\.venv\Scripts\Activate.ps1` in PowerShell or
-`source .venv/bin/activate` on macOS/Linux.
+Activate the virtual environment.
+
+| Terminal | Command |
+| --- | --- |
+| Windows PowerShell | `.\.venv\Scripts\Activate.ps1` |
+| Windows Command Prompt | `.venv\Scripts\activate.bat` |
+| macOS / Linux | `source .venv/bin/activate` |
+
+Then install dependencies and start the application.
 
 ```sh
 python -m pip install -r requirements.txt
 python -m streamlit run streamlit_app.py
 ```
 
-Start in **Demo Mode**, choose a suggested question, and press **Run Analysis**.
-Demo Mode uses precomputed explanations and actual calculations from validated data.
-It makes no API calls and needs no credentials. After dependencies are installed,
-the local analyst demo and Plotly dashboard work without internet. Tableau needs
-internet access.
+1. Open the local address printed by Streamlit.
+2. Select **AI Analyst** and leave **Demo Mode** selected.
+3. Choose **Which category generated the most revenue?** from the suggested questions.
+4. Click **Run Analysis**. The demo identifies Electronics with **$4,196.50** in revenue.
+5. Open the metrics, limitations, and underlying tools to inspect the evidence.
+6. Switch to **Sales Dashboard** to explore charts and filters.
 
-The original terminal interfaces remain available.
+Demo Mode needs no `.env` file, OpenAI account, or API credits. It uses prepared
+explanations with calculated facts, and labels that no AI request was made. After
+installation, the local demo and sales dashboard can run offline. Tableau requires
+internet access. Repository access is required to clone a private repository.
 
-```sh
-python app.py
-python app.py --ask "Which category generated the most revenue?"
-python -m pytest -q
-```
+## How the agent works
 
-## Live Mode setup
+Live Mode uses the OpenAI Responses API and executes model-selected function calls.
 
-Copy `.env.example` to a local `.env` file. Set `OPENAI_API_KEY` there or in the
-server's environment. Optionally set `OPENAI_MODEL`. An empty model value uses
-`gpt-5.4-mini`. The application has no API-key input field and never displays keys.
-`.env`, its variants, and `.streamlit/secrets.toml` are ignored by Git. Only the
-empty `.env.example` is included.
+1. **Plan.** The model chooses from four explicit tool schemas for total revenue,
+   category sales, monthly revenue, and top products.
+2. **Execute Python tools.** An allowlist validates tool names and empty-object
+   arguments before running the existing pandas functions on the trusted dataframe.
+3. **Return evidence.** Calculated results are serialized as JSON and returned with
+   matching function-call IDs. The conversation preserves response items for continuation.
+4. **Write the report.** A separate Structured Outputs request produces insights,
+   recommendations, and limitations using only the calculation results.
+5. **Verify numerical claims.** Metric references bind exact values to labels and
+   units. They render as complete sentences, such as “Electronics generated
+   $4,196.50 in revenue from 184 units sold.” Inline metric substitutions and explicit
+   model-authored numerical claims are rejected.
+6. **Reflect once.** Verification issues can trigger one revision. Remaining
+   unverified statements are removed and flagged.
 
-Select **Live Mode** and run a question. This calls the existing `run_agent()`
-implementation. Each question starts an independent analysis. The latest five
-analyses stay in session memory with their mode and evidence scope attached.
-
-Suggested questions include
-
-- Which category generated the most revenue?
-- Show monthly revenue trends.
-- What are the top five products by revenue?
-- What is total revenue?
-
-Dashboard filters affect only Sales Dashboard. They do not affect AI Analyst or
-Tableau. Local CSV changes invalidate cached validation and clear displayed analyses.
+Tool execution is bounded to four rounds. Each question is independent.
+Qualitative interpretation still requires human review.
 
 ## Architecture
 
 ```mermaid
-flowchart TD
-    CSV[Validated local sales CSV] --> Tools[Existing pandas tools]
-    CLI[Terminal CLI] --> Tools
-    CLI --> Agent[Existing run_agent]
-    UI[Streamlit workspace] --> Filter[Category and date filters]
-    Filter --> Tools
-    Tools --> Charts[Plotly charts and KPIs]
-    UI --> Route[Demo or Live routing]
-    Route --> Demo[Precomputed demo templates]
-    Demo --> Tools
-    Route --> Agent
-    Agent --> Plan[OpenAI Responses planner]
-    Plan --> Allowlist[Validated function allowlist]
-    Allowlist --> Tools
-    Tools --> Results[JSON tool results]
-    Results --> Writer[Separate structured report writer]
-    Writer --> Verify[Deterministic checks and at most one revision]
-    Verify --> Adapter[Presentation adapter]
-    Adapter --> UI
-    UI --> Embed[Tableau v3 embed and direct link]
-    Embed --> Tableau[Independent Tableau Public view]
+flowchart LR
+    UI[Streamlit workspace] --> Demo[Offline demo templates]
+    UI --> Plan[Live LLM planner]
+    Plan --> Tools[Allowlisted pandas tools]
+    CSV[Validated sales CSV] --> Tools
+    Tools -->|Demo facts| Demo
+    Demo --> UI
+    Tools -->|Live results| Write[Evidence-based report writer]
+    Write --> Verify[Numerical checks and one revision]
+    Verify --> UI
+    CSV --> Charts[Filtered Plotly dashboard]
+    Charts --> UI
+    UI --> Tableau[Independent Tableau Public view]
 ```
 
-| Module | Responsibility |
+The report-writing and verification path belongs to Live Mode. Demo Mode uses the
+pandas tools with prepared answer templates. The terminal interface reuses the same
+analysis functions and live agent.
+
+| Component | Responsibility |
 | --- | --- |
-| `tools.py` | Existing validation and deterministic sales analysis |
-| `agent.py` | Existing planner, controlled execution, writing, and reflection |
-| `app.py` | Existing terminal report and `--ask` interface |
-| `dashboard.py` | Pure filters, consistent KPI calculations, and Plotly figures |
-| `presentation.py` | Report section adapter, curated demo answers, and mode routing |
-| `streamlit_app.py` | Navigation, session state, accessible controls, and report display |
-| `tableau.py` | Fixed public dashboard URL, v3 embed, and fallback |
-| `generate_data.py` | Reproducible fictional CSV generator |
-
-The Live planner selects real calls to `total_revenue`, `category_sales`,
-`monthly_revenue`, and `top_products`. Strict empty-object schemas and an explicit
-allowlist reject arbitrary functions, paths, and arguments. Responses continuation
-returns each calculation through a matching `function_call_output` ID and retains
-reasoning items. Execution is bounded to four tool rounds.
-
-A separate writing request uses strict Structured Outputs for insights,
-recommendations, and limitations. Complete fact references bind values to labels and
-units. Metric references must be standalone insight entries and render as natural,
-complete sentences such as “Electronics generated $4,196.50 in revenue from 184 units
-sold.” Inline metric substitution is rejected. Monetary output uses USD with commas
-and two decimal places. The UI shows the summary insight once and lists only distinct
-additional insights. Deterministic verification rejects unsupported explicit numerical claims,
-allows one revision, then removes and flags unverified statements. The UI adapts
-these report sections without rewriting the agent's claims. Qualitative
-interpretations still require human review.
+| `tools.py` | CSV validation and deterministic pandas analysis |
+| `agent.py` | Planning, safe function dispatch, report writing, and reflection |
+| `dashboard.py` | Inclusive filters, KPI calculations, and Plotly figures |
+| `presentation.py` | Report adapter, demo answers, and mode routing |
+| `streamlit_app.py` | Three-section UI, session history, and evidence display |
+| `tableau.py` | Fixed published view, v3 embed, and direct-link fallback |
+| `app.py` / `generate_data.py` | CLI entry point and reproducible data generation |
 
 ## Technology stack
 
-Python, pandas, Streamlit, Plotly, the official OpenAI Python SDK, python-dotenv,
-pytest, and the existing Tableau Public dashboard. The application runs locally.
+| Layer | Technology |
+| --- | --- |
+| Language and analysis | Python, pandas |
+| Web interface and charts | Streamlit, Plotly |
+| Live AI integration | Official OpenAI Python SDK, Responses API, Structured Outputs |
+| Configuration | Environment variables, python-dotenv |
+| Testing | pytest, Streamlit AppTest, scripted clients, mocked SDK HTTP transport |
+| Independent visualization | Tableau Public |
 
-## Data and metric definitions
+## Live Mode and CLI examples
 
-`data/sales.csv` contains date, order_id, product, category, quantity, and unit_price.
-Run `python generate_data.py` to recreate it using a fixed seed.
+Copy `.env.example` to a local `.env` file and set `OPENAI_API_KEY`, or supply the
+key through the server environment. Optionally set `OPENAI_MODEL`. An empty value
+uses the configured default, `gpt-5.4-mini`. Select **Live Mode** in Streamlit.
 
-Validation rejects missing columns, bad dates, nonpositive or fractional quantities,
-negative/nonfinite prices, empty datasets, duplicate order IDs, and missing labels.
-Revenue equals quantity multiplied by unit price. Monetary output uses two decimal
-places. Units sold is the sum of quantities. A transaction is one CSV row.
+```sh
+python app.py
+python app.py --ask "Which category generated the most revenue?"
+python app.py --ask "Show monthly revenue trends."
+python app.py --ask "What are the top five products by revenue?"
+```
 
-Dashboard dates are inclusive. An empty category selection produces zero metrics
-and an explicit empty state. Monthly gaps between the first and last matching sale
-are filled with zero. Filtered partial months show only their matching sales.
-Top products are ranked by revenue with alphabetical tie-breaking.
+The first command runs the deterministic report without credentials. The `--ask`
+commands make live API requests and incur OpenAI charges. The same four sample
+questions, including “What is total revenue?”, are available in Demo Mode.
 
-## Tableau integration
+## Synthetic dataset and verified metrics
 
-The Tableau page loads the published dashboard with the supported
-[Tableau Embedding API v3](https://help.tableau.com/current/api/embedding_api/en-us/docs/embedding_api_basic.html).
-A direct link remains visible if scripts, cookies, or the remote view are blocked.
-The embed reports loading failures or a prolonged load. This view is an independent
-portfolio component with its own data, refresh behavior, and controls.
+`data/sales.csv` contains 240 fictional transactions across eight products and four
+categories from January through June 2025. Each row includes `date`, `order_id`,
+`product`, `category`, `quantity`, and `unit_price`.
+
+| Full-dataset metric | Verified value |
+| --- | --- |
+| Total revenue | **$12,951.00 USD** |
+| Transactions | **240** |
+| Units sold | **717** |
+| Leading category by revenue | **Electronics · $4,196.50 USD** |
+| Leading product by revenue | **Wireless Mouse · $3,152.50 USD** |
+
+Revenue is quantity × unit price. Units sold is the sum of quantities. All monetary
+figures are displayed to two decimal places. These figures describe the bundled
+synthetic dataset and do not represent results achieved by a real business.
+
+Run `python generate_data.py` to recreate the CSV using its fixed seed. Validation
+rejects missing columns, invalid dates, invalid quantities, negative or nonfinite
+prices, missing labels, duplicate order IDs, and empty data.
+
+Dashboard dates are inclusive. Empty selections show zero KPIs and an explicit
+empty state. Monthly gaps between the first and last matching sale are filled with
+zero, and filtered partial months contain only their matching transactions.
+Product revenue ties are broken alphabetically.
 
 ## Testing and evaluation
 
 ```sh
 python -m pytest -q
-python app.py
+python -m pip check
 ```
 
-Default tests use scripted clients and mocked SDK HTTP transport. They make no real
-OpenAI requests. The suite preserves the original pandas and agent tests and adds
-
-- Hand-calculated filtered KPIs, inclusive dates, empty selections, and chart values
-- Report claim preservation and explicit demo/live routing
-- Streamlit AppTest checks for demo analysis, mocked live dispatch, dashboard filters,
-  empty states, and Tableau fallback presentation
-- Existing byte-identical dataset regeneration and strict report-request regression checks
+The automated suite covers hand-calculated analysis results, validation failures,
+filters and chart values, actual tool dispatch, multiple calls, iteration limits,
+API failures, numerical verification, reflection, report readability, and
+Streamlit interactions. Default tests use fake clients and mocked HTTP transport,
+so they make no real OpenAI requests.
 
 `evaluations.json` contains twelve questions with expected tools or answer facts.
-Offline tests verify the execution contract, not live model quality. For a live
-evaluation, run each question with `--ask` and compare its tools and answer against
-the case. Live API behavior and browser-only interactions require separate checks.
+These offline cases test execution contracts and known answers. They do not
+establish live model-selection accuracy. Live evaluation requires running the
+questions with `--ask` and reviewing their tools, answers, and limitations.
 
-## Presentation and screenshots
+## Limitations and security
 
-Use [the three-minute beginner demo](docs/nontechnical_demo.md) or
-[the five-minute technical walkthrough](docs/technical_walkthrough.md).
+- **Evidence scope.** The data supports descriptive revenue and units. It lacks costs,
+  customers, stock levels, and causal evidence. Profit, forecasts, and explanations
+  for changes are unsupported.
+- **Verification scope.** Deterministic checks constrain explicit numerical claims.
+  They cannot prove every natural-language interpretation or identify every
+  possible misleading statement. Recommendations require human judgment.
+- **Demo scope.** Demo Mode answers curated questions. Live questions each use the
+  complete dataset and do not inherit dashboard filters or previous-question context.
+- **Credentials.** API keys stay in the server environment or local `.env`.
+  Git ignores `.env` variants and `.streamlit/secrets.toml`. The committed
+  `.env.example` contains empty variable assignments only.
+- **Execution boundary.** The model cannot execute generated Python, shell commands,
+  or arbitrary filesystem operations through the tool interface. API error messages
+  are sanitized before display.
+- **Privacy and cost.** Live Mode sends the question and aggregate calculation
+  results to OpenAI. It has a 30-second request timeout, no automatic SDK retries,
+  and an output-token cap. Review API pricing before using Live Mode.
+- **External and local operation.** Tableau availability depends on internet access
+  and browser policy. This local portfolio app has no authentication or hosted
+  multiuser controls.
+- **Remaining verification.** Live API quality, browser-level layout, Plotly hover
+  interactions, and Tableau embed loading have not been verified in this environment.
 
-For portfolio screenshots, run the app at a desktop viewport and capture
-
-1. Sales Dashboard with all categories and dates, all three KPIs, and charts
-2. AI Analyst after the category question in clearly labeled Demo Mode
-3. Tableau Intelligence after the external view loads, keeping the direct link visible
-
-Use actual running-app captures. Show the selected filters and mode, and remove any
-private browser content. For a narrow-window check, confirm stacked controls, readable
-charts, and accessible navigation. Screenshots are not bundled with this change.
-
-## Costs, privacy, and limitations
-
-Live questions send the question and aggregate calculation results to OpenAI.
-Supported questions usually require three requests and can require up to seven.
-Each response is capped at 1,800 output tokens. Requests have a 30-second timeout
-and no automatic SDK retries. Repeated conversation input also costs tokens.
-Review [current model pricing](https://developers.openai.com/api/docs/models/gpt-5.4-mini)
-before a live demo.
-
-No API key was available during development. Live model quality remains pending
-verification. Tests simulate the SDK boundary and do not establish production API
-availability. Browser rendering and Tableau loading can vary with browser policy,
-network access, and the independently published workbook.
-
-The dataset supports descriptive revenue and units. It lacks costs, customer
-records, inventory levels, and causal evidence. Profit, forecasts, and reasons for
-changes are unsupported. The model's unsupported-question classification and its
-qualitative statements still need review. Demo Mode answers only curated questions.
-
-This is a local portfolio application with no authentication, deployment, or
-multiuser access controls. Avoid exposing a credential-backed local server publicly.
-The pandas arithmetic is retained from the existing implementation and displayed
-to cents.
-
-Implementation references include the official
-[Responses function-calling guide](https://developers.openai.com/api/docs/guides/function-calling)
-and [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
-
+For a short presentation, use the [three-minute beginner demo](docs/nontechnical_demo.md)
+or [five-minute technical walkthrough](docs/technical_walkthrough.md). Repository
+description, suggested topics, and resume bullets are in [the portfolio file](docs/portfolio.md).
