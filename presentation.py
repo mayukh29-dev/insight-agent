@@ -33,6 +33,11 @@ class Report:
                 return entries[0]
         return "No summary was returned. Review the original report below."
 
+    @property
+    def additional_insights(self):
+        """Show the summary once and keep other distinct insights in order."""
+        return list(dict.fromkeys(insight for insight in self.insights if insight != self.summary))
+
 
 def parse_report(text, question):
     """Split the CLI report at its existing section boundaries without rewriting claims."""
