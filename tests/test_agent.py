@@ -9,7 +9,7 @@ import pytest
 from openai import APITimeoutError, OpenAI
 from openai.types.responses import Response
 
-from agent import AgentError, TOOL_SCHEMAS, run_agent, verify_report
+from agent import AgentError, TOOL_SCHEMAS, build_facts, execute_tool, run_agent, verify_report
 from generate_data import DATA_PATH, generate_sales
 from tools import load_sales
 
@@ -53,10 +53,10 @@ def sales():
 def test_selection_execution_and_continuation(sales):
     client = FakeClient(response(("category_sales", "{}", "call_a"),
                                  ("total_revenue", "{}", "call_b")),
-                        response(text="Ready"), draft("Leading category: {{category_sales.0}}"))
+                        response(text="Ready"), draft("{{category_sales.0}}"))
     report = run_agent("Which category leads revenue?", sales, client)
-    assert "Electronics revenue is USD 4196.50 with 184 units sold" in report
-    assert "Total revenue is USD 12951.00" in report
+    assert "Electronics generated $4,196.50 in revenue from 184 units sold." in report
+    assert "Total revenue was $12,951.00." in report
     outputs = [item for item in client.requests[1]["input"] if isinstance(item, dict)
                and item.get("type") == "function_call_output"]
     assert [item["call_id"] for item in outputs] == ["call_a", "call_b"]
@@ -68,10 +68,11 @@ def test_selection_execution_and_continuation(sales):
 def test_sequential_rounds(sales):
     client = FakeClient(response(("monthly_revenue", "{}", "a")),
                         response(("top_products", "{}", "b")), response(text="Ready"),
-                        draft("{{monthly_revenue.0}}; {{top_products.0}}"))
+                        response(text=json.dumps({"insights": ["{{monthly_revenue.0}}", "{{top_products.0}}"],
+                                                  "recommendations": [], "limitations": []})))
     result = run_agent("Summarize months and top products", sales, client)
-    assert "2025-01 revenue is USD 2131.00" in result
-    assert "Wireless Mouse revenue is USD 3152.50" in result
+    assert "Revenue in 2025-01 was $2,131.00." in result
+    assert "Wireless Mouse generated $3,152.50 in revenue." in result
 
 
 @pytest.mark.parametrize(("name", "arguments"), [
@@ -125,7 +126,7 @@ def test_reflection_revises_once_and_removes_bad_claim(sales):
 def test_reflection_success(sales):
     client = FakeClient(response(("total_revenue", "{}", "a")), response(text="Ready"),
                         draft("Revenue is $999"), draft())
-    assert "Total revenue is USD 12951.00" in run_agent("Revenue?", sales, client)
+    assert "Total revenue was $12,951.00." in run_agent("Revenue?", sales, client)
     assert len(client.requests) == 4
 
 
@@ -181,7 +182,8 @@ def test_evaluation_contract(sales, case):
     if not calls:
         replies = [response(text="Unsupported")]
     report = run_agent(case["question"], sales, FakeClient(*replies))
-    assert case["fact"] in report
+    # Expected amount facts stay numeric in the evaluation fixture.
+    assert case["fact"] in report.replace(",", "")
 
 
 @pytest.mark.parametrize(("status", "message"), [
@@ -212,7 +214,7 @@ def test_real_sdk_transport_offline(sales):
 
     with OpenAI(api_key="unit-test-placeholder", max_retries=0,
                 http_client=httpx2.Client(transport=httpx2.MockTransport(handle))) as client:
-        assert "USD 12951.00" in run_agent("Revenue?", sales, client)
+        assert "Total revenue was $12,951.00." in run_agent("Revenue?", sales, client)
     assert requests[0]["store"] is False
     # Check the actual serialized SDK requests for both writing and revision.
     expected_format = {
@@ -243,4 +245,61 @@ def test_cli_ask(sales, monkeypatch, capsys):
     monkeypatch.setattr("agent.OpenAI", lambda **kwargs: client)
     monkeypatch.setenv("OPENAI_API_KEY", "unit-test-placeholder")
     app.main()
-    assert "USD 12951.00" in capsys.readouterr().out
+    assert "Total revenue was $12,951.00." in capsys.readouterr().out
+
+
+def test_verified_fact_sentences_keep_values_labels_and_units(sales):
+    results = {name: execute_tool(name, "{}", sales) for name in (
+        "category_sales", "monthly_revenue", "top_products", "total_revenue"
+    )}
+    facts = build_facts(results)
+    assert facts["category_sales.0"] == "Electronics generated $4,196.50 in revenue from 184 units sold."
+    assert facts["monthly_revenue.0"] == "Revenue in 2025-01 was $2,131.00."
+    assert facts["top_products.0"] == "Wireless Mouse generated $3,152.50 in revenue."
+    assert facts["total_revenue"] == "Total revenue was $12,951.00."
+    report, issues = verify_report(json.dumps({
+        "insights": ["{{category_sales.0}}"], "recommendations": [], "limitations": []
+    }), facts)
+    assert not issues
+    assert report["insights"] == [facts["category_sales.0"]]
+    assert results["category_sales"]["rows"][0]["revenue"] == "4196.50"
+
+
+@pytest.mark.parametrize(("section", "entry"), [
+    ("insights", "Review the product mix for {{category_sales.0}}"),
+    ("insights", "Leading category: {{category_sales.0}}"),
+    ("insights", "{{category_sales.0}} and {{total_revenue}}"),
+    ("recommendations", "Review pricing for {{category_sales.0}}"),
+    ("recommendations", "{{category_sales.0}}"),
+    ("limitations", "{{category_sales.0}}"),
+    ("insights", "{{unknown}}"),
+    ("insights", "Electronics generated $4,196.50 in revenue from 184 units sold."),
+    ("insights", "Home generated $4,196.50 in revenue."),
+    ("insights", "Revenue doubled because of promotions."),
+    ("insights", "Forecast profit is ten percent higher."),
+])
+def test_verifier_rejects_inline_facts_and_unsupported_claims(sales, section, entry):
+    facts = build_facts({"category_sales": execute_tool("category_sales", "{}", sales)})
+    payload = {"insights": [], "recommendations": [], "limitations": []}
+    payload[section] = [entry]
+    report, issues = verify_report(json.dumps(payload), facts)
+    assert issues
+    assert report[section] == []
+
+
+def test_inline_metric_triggers_one_revision(sales):
+    client = FakeClient(response(("category_sales", "{}", "a")), response(text="Ready"),
+                        draft("Review the product mix for {{category_sales.0}}"),
+                        response(text=json.dumps({
+                            "insights": ["{{category_sales.0}}", "{{category_sales.0}}"],
+                            "recommendations": ["Review the Electronics product mix before making decisions."],
+                            "limitations": ["Additional evidence is needed to explain the category mix."],
+                        })))
+    text = run_agent("Which category generated the most revenue?", sales, client)
+    insights = text.split("\n\nBusiness insights\n")[1].split("\n\nRecommendations\n")[0]
+    assert insights == "- Electronics generated $4,196.50 in revenue from 184 units sold."
+    assert "Review the product mix for Electronics generated" not in text
+    assert "All monetary amounts are in USD." in text
+    assert "Qualitative interpretations require human review." in text
+    assert len(client.requests) == 4
+    assert "standalone" in client.requests[3]["input"]
