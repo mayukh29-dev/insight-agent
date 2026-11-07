@@ -62,3 +62,26 @@ def test_tableau_embed_uses_fixed_public_view():
     assert "tableau.embedding.3.latest.min.js" in html
     assert "VizLoadError" in html
     assert "Open full dashboard" in html
+
+
+def test_live_summary_appears_once_and_limitations_remain(monkeypatch):
+    def live(question, sales):
+        return ("Question\nRevenue?\n\nTools executed\ncategory_sales\n\nKey metrics\n"
+                "- Electronics generated $4,196.50 in revenue from 184 units sold.\n\n"
+                "Business insights\n- Electronics leads category revenue.\n"
+                "- Review the category mix.\n- Electronics leads category revenue.\n\n"
+                "Recommendations\n- Investigate availability.\n\nLimitations\n"
+                "- All monetary amounts are in USD.\n- Fictional sales only.")
+
+    monkeypatch.setattr("agent.run_agent", live)
+    at = AppTest.from_file(str(APP), default_timeout=30).run()
+    at.radio(key="analysis_mode").set_value("Live Mode").run()
+    at.text_area(key="question").set_value("Revenue?").run()
+    at.button[0].click().run()
+    assert not at.exception
+    rendered = [entry.value for entry in at.chat_message[1].markdown]
+    assert rendered.count("Electronics leads category revenue.") == 1
+    assert rendered.count("Review the category mix.") == 1
+    assert "Electronics generated $4,196.50 in revenue from 184 units sold." in rendered
+    assert "All monetary amounts are in USD." in rendered
+    assert "Fictional sales only." in rendered
