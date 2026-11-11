@@ -80,11 +80,17 @@ def ingest(source):
         missing_dates[column] = int(parsed.isna().sum())
         orders[column] = parsed
     purchase = orders.order_purchase_timestamp
+    timestamp_inconsistencies = {}
+    inconsistent_orders = pd.Series(False, index=orders.index)
     for column in DATES[1:]:
         if column in orders:
-            require(not (orders[column] < purchase).any(), f"orders: {column} precedes purchase")
+            inconsistent = orders[column] < purchase
+            timestamp_inconsistencies[column + "_precedes_purchase"] = int(inconsistent.sum())
+            inconsistent_orders |= inconsistent
     if all(c in orders for c in DATES[2:4]):
-        require(not (orders.order_delivered_customer_date < orders.order_delivered_carrier_date).any(), "orders: delivery precedes carrier handoff")
+        inconsistent = orders.order_delivered_customer_date < orders.order_delivered_carrier_date
+        timestamp_inconsistencies["customer_delivery_precedes_carrier_handoff"] = int(inconsistent.sum())
+        inconsistent_orders |= inconsistent
     for column in ["price", "freight_value"]:
         items[column + "_cents"] = items[column].map(cents)
     eligible = orders.order_status.eq("delivered") & purchase.notna()
@@ -116,6 +122,8 @@ def ingest(source):
         "input_rows": {n: len(f) for n, f in tables.items()},
         "status_counts": dict(sorted(Counter(orders.order_status).items())),
         "missing_dates": missing_dates, "excluded_orders": int((~eligible).sum()),
+        "timestamp_inconsistencies": timestamp_inconsistencies,
+        "orders_with_timestamp_inconsistencies": int(inconsistent_orders.sum()),
         "excluded_non_delivered_orders": int(orders.order_status.ne("delivered").sum()),
         "excluded_delivered_missing_purchase_date": int((orders.order_status.eq("delivered") & purchase.isna()).sum()),
         "included_orders": len(selected), "included_items": len(joined),
@@ -124,4 +132,9 @@ def ingest(source):
         "source_sha256": hashes,
         "warnings": ["Observation bounds are observed purchase dates, not proof of complete source coverage.", "Zero weeks mean no eligible sales in supplied files; sparse weeks may reflect incomplete coverage.", "Boundary weeks may be partial. No forecasting or refunds ledger is available."],
     }
+    if inconsistent_orders.any():
+        report["warnings"].append(
+            "Optional timestamp ordering inconsistencies were detected; see timestamp_inconsistencies. "
+            "Counts cover all input orders and can overlap. Source timestamps and purchase-based revenue eligibility are unchanged."
+        )
     return weekly, report

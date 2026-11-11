@@ -75,7 +75,9 @@ def test_exact_totals_gaps_categories_and_exclusions(source):
     ("items", "price", ""),
     ("items", "freight_value", "bad"),
     ("translations", "product_category_name_english", ""),
-    ("orders", "order_delivered_customer_date", "2016-01-01 00:00:00"),
+    ("orders", "order_delivered_carrier_date", "not-a-date"),
+    ("orders", "order_delivered_customer_date", "not-a-date"),
+    ("orders", "order_delivered_customer_date", "2025-01-01 00:00:00"),
 ])
 def test_bad_values_fail(source, table, column, value):
     mutate(source, table, column, value)
@@ -149,5 +151,46 @@ def test_optional_dates_and_late_delivery(source):
     assert ingest(source)[1]["missing_dates"]["order_delivered_customer_date"] == 4
     frame.loc[0, "order_delivered_customer_date"] = "2017-01-04 11:00:00"
     frame.to_csv(path, index=False)
-    with pytest.raises(ValidationError, match="carrier handoff"):
-        ingest(source)
+    weekly, report = ingest(source)
+    assert report["timestamp_inconsistencies"]["customer_delivery_precedes_carrier_handoff"] == 1
+    assert report["orders_with_timestamp_inconsistencies"] == 1
+    assert weekly.revenue_brl_cents.tolist() == [3030, 0, 0, 505]
+
+
+def test_timestamp_anomalies_reported_without_changing_sources_or_revenue(source):
+    baseline, _ = ingest(source)
+    path = source / FILES["orders"][0]
+    frame = pd.read_csv(path, dtype=str, keep_default_na=False)
+    for column in ["order_approved_at", "order_delivered_carrier_date", "order_delivered_customer_date", "order_estimated_delivery_date"]:
+        frame[column] = ""
+        frame.loc[0, column] = "2017-01-03 10:00:00"
+    frame.loc[0, "order_delivered_customer_date"] = "2017-01-02 10:00:00"
+    # Count an anomaly in an excluded order too, once per order rather than item.
+    frame.loc[2, "order_delivered_carrier_date"] = "2017-01-09 10:00:00"
+    # Missing purchase date is not an ordering anomaly.
+    frame.loc[3, "order_delivered_carrier_date"] = "2017-01-01 10:00:00"
+    frame.to_csv(path, index=False)
+    original_bytes = {filename: (source / filename).read_bytes() for filename, _ in FILES.values()}
+    output = source / "output"
+    subprocess.run([sys.executable, "-m", "olist", "--source", str(source), "--output", str(output)], check=True)
+    report = json.loads((output / "quality_report.json").read_text())
+    assert report["timestamp_inconsistencies"] == {
+        "order_approved_at_precedes_purchase": 1,
+        "order_delivered_carrier_date_precedes_purchase": 2,
+        "order_delivered_customer_date_precedes_purchase": 1,
+        "order_estimated_delivery_date_precedes_purchase": 1,
+        "customer_delivery_precedes_carrier_handoff": 1,
+    }
+    assert report["orders_with_timestamp_inconsistencies"] == 2
+    assert any("ordering inconsistencies" in warning for warning in report["warnings"])
+    pd.testing.assert_frame_equal(baseline, ingest(source)[0])
+    assert {filename: (source / filename).read_bytes() for filename in original_bytes} == original_bytes
+
+
+def test_no_timestamp_anomalies_with_absent_or_missing_optional_dates(source):
+    assert ingest(source)[1]["timestamp_inconsistencies"] == {}
+    mutate(source, "orders", "order_delivered_carrier_date", "")
+    report = ingest(source)[1]
+    assert report["timestamp_inconsistencies"] == {"order_delivered_carrier_date_precedes_purchase": 0}
+    assert report["orders_with_timestamp_inconsistencies"] == 0
+    assert not any("ordering inconsistencies" in warning for warning in report["warnings"])

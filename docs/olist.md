@@ -46,8 +46,15 @@ Errors do not echo source identifiers. Extra source columns are allowed.
 
 The required columns are declared in `FILES` in the module. Optional order approval,
 carrier, customer delivery and estimated delivery timestamps are validated when
-present. All supplied dates must be valid source timestamps in 2016–2018; dates
-before purchase and delivery before carrier handoff are rejected. Late deliveries
+present. All supplied dates must be valid source timestamps in 2016–2018.
+Optional timestamps before purchase and customer delivery before carrier handoff
+are counted in `timestamp_inconsistencies` in `quality_report.json`, with a warning
+when any occur. Counts cover all input orders, including excluded statuses, and
+can overlap; `orders_with_timestamp_inconsistencies` counts affected orders once.
+Absent optional columns have no check entry; missing timestamps do not count as
+ordering inconsistencies. These anomalies do not change source files, timestamps,
+or purchase-based revenue eligibility. Malformed and out-of-range dates still fail.
+Late deliveries
 after the estimated date are allowed. Missing dates are counted per column.
 Missing purchase dates exclude the order from revenue; optional missing milestones
 are reported without silently removing otherwise eligible orders. Source timestamps
