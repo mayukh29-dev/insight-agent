@@ -1,0 +1,2 @@
+# Optional forecasting dependency; existing app requirements are unchanged.
+numpy>=2.3.3,<3

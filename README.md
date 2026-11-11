@@ -125,6 +125,11 @@ Olist's public 2016–2018 history. See [download instructions and definitions](
 It does not change the synthetic demo, CLI, Live Mode, dashboards, or Tableau.
 No forecasting model is trained in this phase.
 
+Phase 2 adds an optional [weekly forecasting experiment](docs/forecasting.md):
+reconciled historical BRL totals, two simple baselines, a reproducible ridge model,
+and chronological backtests. Run it separately with `python -m olist.forecast`;
+the existing application and demo stay unchanged.
+
 ## Technology stack
 
 | Layer | Technology |
