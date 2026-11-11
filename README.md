@@ -118,6 +118,13 @@ analysis functions and live agent.
 | `tableau.py` | Fixed published view, v3 embed, and direct-link fallback |
 | `app.py` / `generate_data.py` | CLI entry point and reproducible data generation |
 
+## Optional Olist historical data (Phase 1)
+
+An independent ingestion pipeline prepares weekly BRL item-price revenue from
+Olist's public 2016–2018 history. See [download instructions and definitions](docs/olist.md).
+It does not change the synthetic demo, CLI, Live Mode, dashboards, or Tableau.
+No forecasting model is trained in this phase.
+
 ## Technology stack
 
 | Layer | Technology |

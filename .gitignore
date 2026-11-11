@@ -12,3 +12,9 @@ build/
 dist/
 *.egg-info/
 .streamlit/secrets.toml
+
+# Historical public source files and generated aggregates stay local.
+data/olist/
+olist_*.csv
+product_category_name_translation.csv
+*brazilian-ecommerce*.zip
