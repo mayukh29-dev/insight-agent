@@ -98,4 +98,6 @@ def show():
         st.json(report["backtest_tail_sensitivity"])
         st.caption("Endpoint sensitivity is a separate diagnostic, not the primary scoring window or winner.")
         st.json(report["provenance"])
-    st.caption("Item prices for delivered orders by purchase week; excludes freight, not net of refunds. No models are fitted and no AI requests are made by this dashboard.")
+    st.caption("Item prices for delivered orders by purchase week; excludes freight, not net of refunds. Charts never train models or call AI. The optional Forecast Analyst below calls AI only after explicit Live AI submission.")
+    from .forecast_analyst_page import show as show_analyst
+    show_analyst(directory)

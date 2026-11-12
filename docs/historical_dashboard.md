@@ -2,8 +2,10 @@
 
 Select **Olist historical forecasts** in the existing Streamlit workspace. This
 page is separate from the fictional USD demo. It displays only **2016–2018 public
-historical Olist merchandise value in BRL**. It makes no AI requests, needs no
-OpenAI key, trains no model, and does not forecast current company operations.
+historical Olist merchandise value in BRL**. Charts and Demo need no OpenAI key and
+make no AI request. The optional [Phase 4 Forecast Analyst](forecast_analyst.md)
+calls AI only after explicit Live AI submission. No mode retrains models or
+forecasts current company operations.
 
 ## Prepare the local derived files
 

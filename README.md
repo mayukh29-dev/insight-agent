@@ -136,6 +136,11 @@ those local derived files. Follow the [dashboard setup and walkthrough](docs/his
 Unavailable illustrations show no forecast amount. Olist's historical BRL figures
 are never combined with the fictional USD dataset.
 
+Phase 4 adds an opt-in **AI Forecast Analyst** inside that historical workspace.
+Its key-free Demo and separate GPT-5.4 mini Live AI explain verified BRL facts with
+strict tool/reference checks. See the [architecture and local validation guide](docs/forecast_analyst.md).
+The original fictional-sales agent is unchanged.
+
 ## Technology stack
 
 | Layer | Technology |
