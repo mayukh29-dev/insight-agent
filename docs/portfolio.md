@@ -29,6 +29,15 @@ measure live model accuracy.
 
 ## Showcase links and presentation
 
+The optional [historical Olist forecasting dashboard](historical_dashboard.md)
+adds target-aligned BRL backtest exploration, baseline-versus-ridge errors, and
+source-coverage safeguards to the existing workspace. It reads derived local
+reports without an API key or model training. This is a historical public-data
+experiment, not current Olist performance or a claimed business improvement.
+Licensed files and generated reports stay local. Use the walkthrough's setup
+before demonstrating it; missing data displays instructions rather than invented
+results. Public hosting and AI-agent integration remain separate work.
+
 - [Repository](https://github.com/mayukh29-dev/insight-agent)
 - [Published Tableau dashboard](https://public.tableau.com/views/InsightAgent-RetailSalesIntelligenceDashboard/InsightAgent-RetailSalesOverview)
 - [Three-minute beginner demo](nontechnical_demo.md)
