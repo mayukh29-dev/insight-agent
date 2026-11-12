@@ -179,11 +179,20 @@ def main():
         st.title("◈ InsightAgent")
         st.caption("RETAIL INTELLIGENCE WORKSPACE")
         st.divider()
-        page = st.radio("Workspace", ["AI Analyst", "Sales Dashboard", "Tableau Intelligence"],
+        page = st.radio("Workspace", ["AI Analyst", "Sales Dashboard", "Tableau Intelligence", "Olist historical forecasts"],
                         label_visibility="collapsed", key="workspace")
         st.divider()
-        st.caption("Portfolio project · Fictional retail data")
+        st.caption("Portfolio project · Fictional USD demo / historical Olist BRL")
         st.caption("Python calculations. Evidence you can inspect.")
+    if page == "Olist historical forecasts":
+        # This page never loads or aggregates the fictional USD sales data.
+        try:
+            from olist.dashboard_page import show
+        except ImportError:
+            st.info("Historical dashboard dependencies are unavailable. Install requirements.txt and requirements-forecast.txt. Other workspaces remain available.")
+            return
+        show()
+        return
     if page == "Tableau Intelligence":
         tableau_page()
         return

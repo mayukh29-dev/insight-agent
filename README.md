@@ -20,6 +20,7 @@ OpenAI-powered analyst, and an independently published Tableau Public dashboard.
 | **Live Mode** | Let an OpenAI model select and execute trusted Python tools, then write a report from their results. |
 | **Sales Dashboard** | Explore revenue, transactions, units, category sales, monthly trends, and leading products with interactive Plotly charts. |
 | **Tableau Intelligence** | View the independent Tableau Public dashboard through an embed or open the full dashboard directly. |
+| **Olist historical forecasts** | Compare recorded BRL revenue and historical backtest predictions, errors and source-coverage safeguards without an API key. Requires local derived Olist files. |
 | **Terminal interface** | Run the deterministic report or ask the same live analyst from the command line. |
 
 Dashboard category and date filters apply to every local dashboard KPI and chart.
@@ -129,6 +130,11 @@ Phase 2 adds an optional [weekly forecasting experiment](docs/forecasting.md):
 reconciled historical BRL totals, two simple baselines, a reproducible ridge model,
 and chronological backtests. Run it separately with `python -m olist.forecast`;
 the existing application and demo stay unchanged.
+
+Phase 3 adds the separate **Olist historical forecasts** workspace section using
+those local derived files. Follow the [dashboard setup and walkthrough](docs/historical_dashboard.md).
+Unavailable illustrations show no forecast amount. Olist's historical BRL figures
+are never combined with the fictional USD dataset.
 
 ## Technology stack
 

@@ -55,3 +55,21 @@ for investigation. A person still decides what action makes sense.
 
 The portfolio demonstrates how to connect questions, dependable arithmetic, and
 clear visual evidence in one small application.
+
+## Optional historical Olist walkthrough
+
+After preparing the three derived files with [these instructions](historical_dashboard.md),
+open **Olist historical forecasts**. This is a separate public historical dataset,
+in BRL, not the fictional USD shop or today's Olist business.
+
+Compare recorded weekly values with predictions made using only earlier weeks.
+Change the chart dates and methods; the global error comparison stays fixed.
+Read MAE as average money missed and WAPE as an error percentage, not accuracy.
+Explain honestly if the simple baseline beats ridge. Open the chart evidence to
+inspect exact target-week values.
+
+If the illustration is **Unavailable**, explain why no amount is shown: a partial
+boundary or suspicious source tail can make a zero misleading. Open the quality
+evidence and distinguish calendar bounds from actual source coverage. The business
+lesson is to check the evidence before trusting a prediction. This page works
+without an OpenAI key and makes no model-training or AI request.
