@@ -71,5 +71,12 @@ inspect exact target-week values.
 If the illustration is **Unavailable**, explain why no amount is shown: a partial
 boundary or suspicious source tail can make a zero misleading. Open the quality
 evidence and distinguish calendar bounds from actual source coverage. The business
-lesson is to check the evidence before trusting a prediction. This page works
-without an OpenAI key and makes no model-training or AI request.
+lesson is to check the evidence before trusting a prediction. The charts and Demo
+work without an OpenAI key and make no model-training or AI request.
+
+For the optional [Forecast Analyst demo](forecast_analyst.md), enable the analyst
+and keep **Demo** selected. Ask which method won, why the illustration is unavailable,
+and what the coverage warnings mean. Show the verified source facts and tool names.
+Only explicit **Live AI** submission calls OpenAI; AI selects approved evidence and
+explanations while Python renders numbers. No model-generated causal story or
+replacement numeric forecast is allowed.
