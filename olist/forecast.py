@@ -11,7 +11,7 @@ import re
 import numpy as np
 import pandas as pd
 
-from .pipeline import FILES, ValidationError, require
+from .pipeline import FILES, STATUSES, ValidationError, require
 
 METHODS = ("last_week", "mean_4", "ridge")
 LAGS = 4
@@ -82,6 +82,18 @@ def load_inputs(input_path, quality_path):
     require(weekly_total <= MAX_CENTS, "total exceeds safe modeling range")
     require(weekly_total == category_total, "weekly/category revenue reconciliation failed")
     frame = pd.DataFrame({"week_start": weeks, "revenue_brl_cents": values, "partial_week": partial})
+    if "weekly_order_coverage" in quality:
+        counts = quality["weekly_order_coverage"]
+        require(isinstance(counts, list) and len(counts) == len(frame), "weekly order coverage length mismatch")
+        for row, week, revenue in zip(counts, weeks, values):
+            require(isinstance(row, dict) and row.get("week_start") == week.date().isoformat(), "weekly order coverage dates mismatch")
+            recorded, delivered, items = [nonnegative_int(row.get(k), k) for k in ("recorded_orders", "eligible_delivered_orders", "eligible_items")]
+            statuses = row.get("status_counts")
+            require(isinstance(statuses, dict) and set(statuses) <= STATUSES, "invalid weekly order statuses")
+            require(sum(nonnegative_int(v, "status count") for v in statuses.values()) == recorded, "weekly status counts mismatch")
+            require(statuses.get("delivered", 0) == delivered and recorded >= delivered, "weekly delivered count mismatch")
+            require(items >= delivered and (delivered > 0 or items == 0), "weekly item counts mismatch")
+            require(delivered > 0 or revenue == 0, "revenue without recorded eligible orders")
     return frame, quality, {"passed": True, "weekly_total_brl_cents": weekly_total, "category_total_brl_cents": category_total}
 
 
@@ -152,6 +164,65 @@ def coverage(frame):
             "sparse_period_policy": "first 12 complete weeks are fixed training warm-up; retain zero, sparse and outlier weeks thereafter; no automatic ramp-up trimming"}
 
 
+def recent_coverage(complete, quality):
+    """Conservative diagnostics, never a claim that absence of sales proves a gap."""
+    values = complete.revenue_brl_cents.tolist()
+    counts = {row["week_start"]: row for row in quality.get("weekly_order_coverage", [])}
+    tail = []
+    for row in complete.tail(4).itertuples(index=False):
+        week = row.week_start.date().isoformat()
+        evidence = counts.get(week)
+        if row.revenue_brl_cents != 0:
+            kind = "positive_recorded_item_value"
+        elif evidence is None:
+            kind = "zero_recorded_value_cause_unknown"
+        elif evidence["eligible_delivered_orders"] > 0:
+            kind = "zero_value_eligible_items_recorded"
+        elif evidence["recorded_orders"] > 0:
+            kind = "only_ineligible_order_statuses_recorded"
+        else:
+            kind = "no_orders_recorded"
+        tail.append({"week_start": week, "revenue_brl_cents": int(row.revenue_brl_cents),
+                     "calendar_complete": True, "source_completeness": "unverified",
+                     "recorded_value_explanation": kind, "order_evidence": evidence})
+    trailing = 0
+    for value in reversed(values):
+        if value != 0:
+            break
+        trailing += 1
+    reasons = []
+    reference_sum = sum(values[-12:-4])
+    recent_sum = sum(values[-4:])
+    if reference_sum > 0 and recent_sum * 20 <= reference_sum:
+        reasons.append("last_4_weeks_at_most_10_percent_of_prior_8_week_mean")
+    if trailing >= 2 and any(values[:-trailing]):
+        reasons.append("multiple_trailing_zero_weeks_after_recorded_sales")
+    if (tail[-1]["order_evidence"] is not None
+            and tail[-1]["order_evidence"]["eligible_delivered_orders"] == 0
+            and any(values[-12:-1])):
+        reasons.append("latest_week_has_no_eligible_orders_after_recent_recorded_sales")
+    positive = complete.loc[complete.revenue_brl_cents.gt(0), "week_start"]
+    return {"status": "suspected_unreliable" if reasons else "no_truncation_signal_detected",
+            "reasons": reasons, "last_4_complete_weeks": tail, "trailing_zero_weeks": trailing,
+            "last_positive_revenue_week": positive.iloc[-1].date().isoformat() if len(positive) else None,
+            "last_4_revenue_brl_cents": recent_sum, "prior_8_revenue_brl_cents": reference_sum,
+            "rule": "suppress illustration on trailing zeros after sales, a >=90% four-week collapse vs prior eight weeks, or latest week lacking eligible orders after recent sales",
+            "interpretation": "Calendar completeness is not source completeness. These are truncation suspicions, not proof of missing data or genuine zero demand; legitimate closures can trigger them. Never delete, impute or reclassify recorded zeros."}
+
+
+def tail_sensitivity(rows):
+    """Fixed diagnostic only: rescore original predictions without final four targets."""
+    retained = rows[:-4]
+    result = {"used_for_selection": False, "excluded_target_weeks": [r["target_week"] for r in rows[-4:]],
+              "rule": "remove exactly final four backtest targets for endpoint sensitivity only; no refit, no change to primary window or winner"}
+    if len(retained) < MIN_EVALUATION:
+        return {**result, "available": False, "reason": "fewer than four remaining evaluation weeks"}
+    scores = {name: metrics([r["actual_brl_cents"] for r in retained], [r["predictions_brl_cents"][name] for r in retained]) for name in METHODS}
+    return {**result, "available": True, "weeks": len(retained), "start": retained[0]["target_week"],
+            "end": retained[-1]["target_week"], "scores": scores, "comparison": select(scores),
+            "caution": "Sensitivity is not a corrected evaluation window or evidence of complete coverage; sparse early periods remain."}
+
+
 def run(input_path, quality_path):
     frame, quality, reconciliation = load_inputs(input_path, quality_path)
     complete = frame.loc[~frame.partial_week].reset_index(drop=True)
@@ -167,9 +238,15 @@ def run(input_path, quality_path):
     selection = select(scores)
     future, audit = predict(values)
     next_week = complete.week_start.iloc[-1] + pd.Timedelta(days=7)
+    overlap = bool((frame.week_start.eq(next_week) & frame.partial_week).any())
+    recent = recent_coverage(complete, quality)
+    unavailable_reasons = (["known_partial_target_week"] if overlap else [])
+    if recent["status"] == "suspected_unreliable":
+        unavailable_reasons.append("recent_source_coverage_unreliable")
+    available = not unavailable_reasons
     sha = lambda path: hashlib.sha256(Path(path).read_bytes()).hexdigest()
     return {
-        "report_version": 1, "currency": "BRL", "horizon_weeks": 1,
+        "report_version": 2, "currency": "BRL", "horizon_weeks": 1,
         "source_timeframe": {"start": quality["observation_start"], "end": quality["observation_end"]},
         "revenue_definition": quality["revenue_definition"], "reconciliation": reconciliation,
         "source_quality_summary": {key: quality[key] for key in (
@@ -180,26 +257,30 @@ def run(input_path, quality_path):
         "provenance": {"weekly_input_sha256": sha(input_path), "quality_input_sha256": sha(quality_path),
                        "source_sha256": quality["source_sha256"], "forecast_code_sha256": sha(__file__),
                        "python": platform.python_version(), "numpy": np.__version__, "pandas": pd.__version__},
-        "coverage": coverage(frame),
+        "coverage": {**coverage(frame), "recent_source_coverage": recent},
         "evaluation": {"start": rows[0]["target_week"], "end": rows[-1]["target_week"], "weeks": len(rows),
                        "rule": "expanding origin; every complete week after first 12; boundary partial weeks excluded from both training and scoring",
                        "reason": "fixed minimum supplies 8 supervised samples with four lags; at least 4 evaluation weeks; no tuning to observed errors",
-                       "training_start": complete.week_start.iloc[0].date().isoformat()},
+                       "training_start": complete.week_start.iloc[0].date().isoformat(),
+                       "coverage_caution": "Scores treat all recorded zeros as observed values, not independently verified true sales. Tail truncation and early sparse weeks can distort comparisons; see backtest_tail_sensitivity."},
         "model": {"name": "ridge", "alpha": ALPHA, "features": ["lag_1", "lag_2", "lag_3", "lag_4", "trailing_mean_4"],
                   "objective": "sum squared errors + alpha * sum squared standardized-feature coefficients; unpenalized centered intercept",
                   "fit_policy": "refit and standardize using earlier training samples only; fixed hyperparameters, no search or random split",
                   "rounding": "nearest integer cent, ties to even; negative predictions clipped to zero", "final_fit": audit},
         "backtest_predictions": rows, "scores": scores, "selection": selection,
+        "backtest_tail_sensitivity": tail_sensitivity(rows),
         "next_week_illustration": {"target_week": next_week.date().isoformat(),
                                    "trained_through": complete.week_start.iloc[-1].date().isoformat(),
                                    "kind": "prediction, not actual revenue or a current Olist business forecast",
-                                   "overlaps_excluded_partial_week": bool((frame.week_start.eq(next_week) & frame.partial_week).any()),
-                                   "predictions_brl_cents": future, "selected_method": selection["method"],
-                                   "selected_prediction_brl_cents": future[selection["method"]]},
+                                   "overlaps_excluded_partial_week": overlap,
+                                   "available": available, "status": "illustrative_only" if available else "unavailable",
+                                   "unavailable_reasons": unavailable_reasons,
+                                   "predictions_brl_cents": future if available else None, "selected_method": selection["method"],
+                                   "selected_prediction_brl_cents": future[selection["method"]] if available else None},
         "limitations": ["Historical 2016–2018 public data; not a forecast of 2026 Olist operations.",
                         "No prediction intervals: too little evidence for a calibrated uncertainty claim.",
                         "Source coverage is not guaranteed; zero weeks and outliers are retained. Review Phase 1 quality warnings.",
-                        "Final partial week, if present, is ignored; illustration targets the week immediately after the last complete week, possibly that excluded partial week.",
+                        "Point predictions are unavailable for known partial targets or suspicious recent coverage; unknown coverage is never certified as genuine zero sales.",
                         "Scores select among three fixed methods on the same backtests; no independent post-selection holdout.",
                         "Late-delivery status is known from the historical extract; backtest simulates availability of weekly totals, not real-time status reporting."]}
 
@@ -214,7 +295,8 @@ def main():
     report = run(args.input, args.quality)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, allow_nan=False), encoding="utf-8")
-    print(json.dumps({"output": str(args.output), "scores": report["scores"], "selection": report["selection"]}, indent=2))
+    print(json.dumps({"output": str(args.output), "scores": report["scores"], "selection": report["selection"],
+                      "next_week_illustration": report["next_week_illustration"]}, indent=2))
 
 
 if __name__ == "__main__":

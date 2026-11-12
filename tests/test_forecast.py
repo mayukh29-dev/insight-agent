@@ -107,6 +107,8 @@ def test_constant_and_zero_history(inputs):
         assert report["selection"]["method"] == "last_week"
         if value == 0:
             assert all(score["wape_percent"] is None for score in report["scores"].values())
+            assert report["next_week_illustration"]["available"]
+            assert report["next_week_illustration"]["selected_prediction_brl_cents"] == 0
 
 
 def test_sparse_and_outlier_weeks_are_retained(inputs):
@@ -131,6 +133,10 @@ def test_partial_boundaries_excluded_transparently(inputs):
     assert report["evaluation"]["end"] == "2017-06-05"
     assert report["next_week_illustration"]["target_week"] == "2017-06-12"
     assert report["next_week_illustration"]["overlaps_excluded_partial_week"]
+    assert report["next_week_illustration"]["status"] == "unavailable"
+    assert report["next_week_illustration"]["unavailable_reasons"] == ["known_partial_target_week"]
+    assert report["next_week_illustration"]["predictions_brl_cents"] is None
+    assert report["next_week_illustration"]["selected_prediction_brl_cents"] is None
     # Reconciliation uses even the excluded boundary values.
     assert report["reconciliation"]["weekly_total_brl_cents"] == int(frame.revenue_brl_cents.sum())
 
@@ -230,3 +236,128 @@ def test_ingestion_to_forecast_contract(tmp_path):
     result = run(input_path, quality_path)
     assert result["reconciliation"]["weekly_total_brl_cents"] == 18000
     assert result["evaluation"]["weeks"] == 5  # last observed Monday is partial
+
+
+@pytest.mark.parametrize("ending", [[0] * 4, [1] * 4, [2000, 2000, 0, 0]])
+def test_trailing_coverage_signal_suppresses_only_illustration(inputs, ending):
+    frame = pd.read_csv(inputs[0])
+    frame["revenue_brl_cents"] = [2000] * 20 + ending
+    frame["revenue_brl"] = frame.revenue_brl_cents.map(lambda v: f"{v / 100:.2f}")
+    rewrite(inputs, frame, category_revenue_brl_cents={"fiction": int(frame.revenue_brl_cents.sum())})
+    report = run(*inputs)
+    assert report["coverage"]["recent_source_coverage"]["status"] == "suspected_unreliable"
+    assert report["next_week_illustration"]["unavailable_reasons"] == ["recent_source_coverage_unreliable"]
+    assert report["next_week_illustration"]["predictions_brl_cents"] is None
+    assert report["next_week_illustration"]["selected_prediction_brl_cents"] is None
+    assert len(report["backtest_predictions"]) == 12
+    assert [r["actual_brl_cents"] for r in report["backtest_predictions"]][-4:] == ending
+    for method in METHODS:
+        expected = metrics([r["actual_brl_cents"] for r in report["backtest_predictions"]],
+                           [r["predictions_brl_cents"][method] for r in report["backtest_predictions"]])
+        assert report["scores"][method] == expected
+    assert report["selection"] == select(report["scores"])
+
+
+def test_reviewed_october_partial_target_and_zero_tail(inputs):
+    # Fictional values/dates reproduce the reported endpoint shape, not Olist records.
+    frame = pd.DataFrame({"week_start": pd.date_range("2018-04-30", periods=25, freq="7D").strftime("%Y-%m-%d"),
+                          "revenue_brl_cents": [2000] * 20 + [0] * 5,
+                          "revenue_brl": ["20.00"] * 20 + ["0.00"] * 5,
+                          "partial_week": [False] * 24 + [True]})
+    rewrite(inputs, frame, observation_start="2018-04-30", observation_end="2018-10-16",
+            category_revenue_brl_cents={"fiction": 40000})
+    report = run(*inputs)
+    last = report["coverage"]["recent_source_coverage"]["last_4_complete_weeks"][-1]
+    assert last["week_start"] == "2018-10-08"
+    assert last["revenue_brl_cents"] == 0
+    assert last["calendar_complete"] and last["source_completeness"] == "unverified"
+    assert last["recorded_value_explanation"] == "zero_recorded_value_cause_unknown"
+    illustration = report["next_week_illustration"]
+    assert illustration["target_week"] == "2018-10-15"
+    assert illustration["unavailable_reasons"] == ["known_partial_target_week", "recent_source_coverage_unreliable"]
+    assert illustration["selected_prediction_brl_cents"] is None
+
+
+@pytest.mark.parametrize("zero_positions", [[0, 1, 2], [18], [23]])
+def test_isolated_and_early_zeros_remain_usable(inputs, zero_positions):
+    frame = pd.read_csv(inputs[0])
+    frame.loc[zero_positions, "revenue_brl_cents"] = 0
+    frame["revenue_brl"] = frame.revenue_brl_cents.map(lambda v: f"{v / 100:.2f}")
+    rewrite(inputs, frame, category_revenue_brl_cents={"fiction": int(frame.revenue_brl_cents.sum())})
+    report = run(*inputs)
+    assert report["next_week_illustration"]["available"]
+    assert report["coverage"]["recent_source_coverage"]["status"] == "no_truncation_signal_detected"
+    assert len(report["coverage"]["zero_weeks"]) == len(zero_positions)
+
+
+def order_evidence(frame):
+    return [{"week_start": row.week_start, "recorded_orders": 1, "eligible_delivered_orders": 1,
+             "eligible_items": 1, "status_counts": {"delivered": 1}} for row in frame.itertuples(index=False)]
+
+
+@pytest.mark.parametrize("cause", ["free_items", "canceled", "absent"])
+def test_weekly_order_evidence_distinguishes_recorded_zero_causes(inputs, cause):
+    frame = pd.read_csv(inputs[0])
+    frame.loc[23, "revenue_brl_cents"] = 0
+    frame.loc[23, "revenue_brl"] = 0.0
+    evidence = order_evidence(frame)
+    if cause != "free_items":
+        evidence[-1].update(eligible_delivered_orders=0, eligible_items=0)
+        evidence[-1]["status_counts"] = {"canceled": 1} if cause == "canceled" else {}
+        evidence[-1]["recorded_orders"] = 1 if cause == "canceled" else 0
+    rewrite(inputs, frame, weekly_order_coverage=evidence,
+            category_revenue_brl_cents={"fiction": int(frame.revenue_brl_cents.sum())})
+    report = run(*inputs)
+    last = report["coverage"]["recent_source_coverage"]["last_4_complete_weeks"][-1]
+    explanations = {"free_items": "zero_value_eligible_items_recorded", "canceled": "only_ineligible_order_statuses_recorded", "absent": "no_orders_recorded"}
+    assert last["recorded_value_explanation"] == explanations[cause]
+    assert report["next_week_illustration"]["available"] == (cause == "free_items")
+    assert last["source_completeness"] == "unverified"
+    assert report["backtest_predictions"][-1]["actual_brl_cents"] == 0
+
+
+@pytest.mark.parametrize("invalid", ["dates", "negative", "status_sum", "items", "positive_without_orders"])
+def test_invalid_coverage_evidence_fails(inputs, invalid):
+    frame = pd.read_csv(inputs[0])
+    evidence = order_evidence(frame)
+    if invalid == "dates":
+        evidence[-1]["week_start"] = "2017-01-02"
+    elif invalid == "negative":
+        evidence[-1]["recorded_orders"] = -1
+    elif invalid == "status_sum":
+        evidence[-1]["recorded_orders"] = 2
+    elif invalid == "items":
+        evidence[-1]["eligible_items"] = 0
+    else:
+        evidence[-1].update(eligible_delivered_orders=0, eligible_items=0, status_counts={"canceled": 1})
+    rewrite(inputs, weekly_order_coverage=evidence)
+    with pytest.raises(ValidationError):
+        run(*inputs)
+
+
+def test_endpoint_sensitivity_is_fixed_diagnostic_not_selection(inputs):
+    report = run(*inputs)
+    sensitivity = report["backtest_tail_sensitivity"]
+    rows = report["backtest_predictions"]
+    assert sensitivity["available"] and not sensitivity["used_for_selection"]
+    assert sensitivity["weeks"] == 8
+    assert sensitivity["excluded_target_weeks"] == [r["target_week"] for r in rows[-4:]]
+    assert sensitivity["end"] == rows[-5]["target_week"]
+    for name in METHODS:
+        assert sensitivity["scores"][name] == metrics([r["actual_brl_cents"] for r in rows[:-4]],
+                                                     [r["predictions_brl_cents"][name] for r in rows[:-4]])
+    assert report["selection"] == select(report["scores"])
+
+
+def test_unavailable_illustration_cli_serializes_null_preserves_files(inputs, tmp_path):
+    frame = pd.read_csv(inputs[0])
+    frame.loc[23, "partial_week"] = True
+    rewrite(inputs, frame, observation_end="2017-06-13")
+    originals = [p.read_bytes() for p in inputs]
+    output = tmp_path / "guarded.json"
+    result = subprocess.run([sys.executable, "-m", "olist.forecast", "--input", str(inputs[0]), "--quality", str(inputs[1]), "--output", str(output)], capture_output=True, check=True, text=True)
+    report = json.loads(output.read_text())
+    assert report["report_version"] == 2
+    assert report["next_week_illustration"]["predictions_brl_cents"] is None
+    assert json.loads(result.stdout)["next_week_illustration"]["status"] == "unavailable"
+    assert [p.read_bytes() for p in inputs] == originals
