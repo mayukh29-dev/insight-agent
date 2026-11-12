@@ -194,3 +194,28 @@ def test_no_timestamp_anomalies_with_absent_or_missing_optional_dates(source):
     assert report["timestamp_inconsistencies"] == {"order_delivered_carrier_date_precedes_purchase": 0}
     assert report["orders_with_timestamp_inconsistencies"] == 0
     assert not any("ordering inconsistencies" in warning for warning in report["warnings"])
+
+
+def test_weekly_order_coverage_explains_gaps_and_exclusions_without_item_duplication(source):
+    _, report = ingest(source)
+    rows = report["weekly_order_coverage"]
+    assert [r["recorded_orders"] for r in rows] == [1, 2, 0, 1]
+    assert [r["eligible_delivered_orders"] for r in rows] == [1, 0, 0, 1]
+    assert [r["eligible_items"] for r in rows] == [2, 0, 0, 1]
+    assert rows[1]["status_counts"]["canceled"] == 1
+    assert rows[1]["status_counts"]["unavailable"] == 1
+    assert sum(r["recorded_orders"] for r in rows) == 4  # missing purchase date separately excluded
+    assert "fiction-a" not in json.dumps(rows)
+
+
+def test_zero_priced_items_are_recorded_as_eligible_sales(source):
+    path = source / FILES["items"][0]
+    frame = pd.read_csv(path)
+    frame.loc[frame.order_id.eq("fiction-a"), "price"] = 0
+    frame.to_csv(path, index=False)
+    original = path.read_bytes()
+    weekly, report = ingest(source)
+    assert weekly.revenue_brl_cents.iloc[0] == 0
+    assert report["weekly_order_coverage"][0]["eligible_delivered_orders"] == 1
+    assert report["weekly_order_coverage"][0]["eligible_items"] == 2
+    assert path.read_bytes() == original

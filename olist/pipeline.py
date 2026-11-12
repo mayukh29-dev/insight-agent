@@ -114,6 +114,18 @@ def ingest(source):
     weekly["revenue_brl_cents"] = [int(totals.get(w, 0)) for w in weeks]
     weekly["revenue_brl"] = weekly.revenue_brl_cents.map(lambda v: f"{v // 100}.{v % 100:02d}")
     weekly["partial_week"] = (weekly.week_start < start) | (weekly.week_start + pd.Timedelta(days=6) > end)
+    # Counts use the orders table before item joins: multi-item orders count once.
+    order_weeks = purchase.dt.to_period("W-SUN").dt.start_time
+    order_statuses = orders.groupby(order_weeks).order_status.value_counts()
+    item_counts = joined.groupby("week_start").size()
+    weekly_order_coverage = []
+    for week in weeks:
+        statuses = {status: int(order_statuses.get((week, status), 0)) for status in sorted(STATUSES)}
+        weekly_order_coverage.append({
+            "week_start": week.date().isoformat(), "recorded_orders": sum(statuses.values()),
+            "eligible_delivered_orders": statuses["delivered"],
+            "eligible_items": int(item_counts.get(week, 0)), "status_counts": statuses,
+        })
     report = {
         "source": "Olist public historical dataset (2016–2018)", "currency": "BRL",
         "revenue_definition": "delivered-order item prices by purchase timestamp; excludes freight; not net of refunds",
@@ -130,6 +142,7 @@ def ingest(source):
         "missing_category_items": int(missing_category.sum()), "unmapped_category_items": int(unmapped.sum()),
         "category_revenue_brl_cents": {str(k): int(v) for k, v in joined.groupby("category").price_cents.agg(lambda values: sum(int(v) for v in values)).items()},
         "source_sha256": hashes,
+        "weekly_order_coverage": weekly_order_coverage,
         "warnings": ["Observation bounds are observed purchase dates, not proof of complete source coverage.", "Zero weeks mean no eligible sales in supplied files; sparse weeks may reflect incomplete coverage.", "Boundary weeks may be partial. No forecasting or refunds ledger is available."],
     }
     if inconsistent_orders.any():

@@ -85,6 +85,13 @@ in the report allow reconciliation to the overall weekly total; source IDs are n
 exported. The report also records input row counts and SHA-256 file fingerprints
 so another run can be compared to the same inputs.
 
+`weekly_order_coverage` lists recorded order counts, eligible delivered-order counts,
+eligible item counts and status counts for every purchase week. Multi-item orders
+count once. It distinguishes empty weeks from weeks with only excluded statuses
+and zero-priced eligible sales. A lack of records is not proof of genuine zero
+marketplace sales, and calendar-complete weeks are not verified source-complete.
+These are additional diagnostics; original CSVs and weekly revenue are unchanged.
+
 ## Weeks and future forecasting
 
 Weeks run Monday through Sunday, labeled by Monday's date, using **purchase time**,
