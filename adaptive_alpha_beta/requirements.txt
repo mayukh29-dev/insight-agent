@@ -1,0 +1,5 @@
+streamlit>=1.45,<2
+pandas>=2.2
+numpy>=2.1
+yfinance>=0.2.50
+openai>=1.70
